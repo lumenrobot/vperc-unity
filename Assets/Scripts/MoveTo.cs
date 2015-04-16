@@ -11,7 +11,7 @@ using System;
 
 public class MoveTo
 {
-	public double BackDistance { get; set; }
-	public double RightDistance { get; set; }
-	public double TurnCcwDeg { get; set; }
+	public float BackDistance { get; set; }
+	public float RightDistance { get; set; }
+	public float TurnCcwDeg { get; set; }
 }

@@ -7,6 +7,8 @@ public class NaoBehavior : MonoBehaviour {
 
 	IModel channel;
 	QueueingBasicConsumer consumer;
+	float elapsedTime = 0.0;
+	float timeToTake = null;
 
 	// Use this for initialization
 	void Start () {
@@ -38,6 +40,13 @@ public class NaoBehavior : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		if (timeToTake != null) {
+			elapsedTime += Time.deltaTime;
+			float t = elapsedTime / timeToTake;
+			transform.Translate(
+				0, 0, 0, Space.Self);
+		}
+
 		RabbitMQ.Client.Events.BasicDeliverEventArgs e = 
 			(RabbitMQ.Client.Events.BasicDeliverEventArgs)consumer.Queue.DequeueNoWait (null);
 		if (e != null) {
@@ -50,6 +59,14 @@ public class NaoBehavior : MonoBehaviour {
 			MoveTo moveToObj = JsonConvert.DeserializeObject<MoveTo>(bodyStr, jsonSettings);
 			Debug.LogFormat ("MoveTo backDistance={0} rightDistance={1} turnCcwDeg={2}",
 			                 moveToObj.BackDistance, moveToObj.RightDistance, moveToObj.TurnCcwDeg);
+
+			elapsedTime = 0.0;
+			timeToTake = Mathf.Sqrt(Mathf.Pow(moveToObj.BackDistance, 2) + Mathf.Pow (moveToObj.RightDistance, 2));
+			/*
+			Vector3.Lerp
+			transform.position.z -= moveToObj.BackDistance;
+			transform.position.x += moveToObj.RightDistance;
+			*/
 		}
 	}
 }
