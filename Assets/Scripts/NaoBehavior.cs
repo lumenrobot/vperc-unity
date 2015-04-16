@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using RabbitMQ.Client;
+using Newtonsoft.Json;
 
 public class NaoBehavior : MonoBehaviour {
 
@@ -20,19 +21,19 @@ public class NaoBehavior : MonoBehaviour {
 		Debug.LogFormat ("Connected to RabbitMQ {0}@{1} {2}", 
 		                 factory.UserName, factory.HostName, factory.VirtualHost);
 		channel = conn.CreateModel ();
-		byte[] body = System.Text.Encoding.UTF8.GetBytes ("{\"name\": \"Hendy\"}");
-		IBasicProperties props = channel.CreateBasicProperties ();
-		channel.BasicPublish ("amq.topic", "avatar.NAO.data.image", props, body);
-		Debug.Log ("Sent");
+		//byte[] body = System.Text.Encoding.UTF8.GetBytes ("{\"name\": \"Hendy\"}");
+		//IBasicProperties props = channel.CreateBasicProperties ();
+		//channel.BasicPublish ("amq.topic", "avatar.NAO.command", props, body);
+		//Debug.Log ("Sent");
 
 		string queue = channel.QueueDeclare ("", false, false, false, null);
-		string imageKey = "avatar.NAO.data.image";
-		Debug.LogFormat ("Bound queue '{0}' to topic '{1}'", queue, imageKey);
-		channel.QueueBind (queue, "amq.topic", imageKey);
+		string commandKey = "avatar.NAO.command";
+		Debug.LogFormat ("Bound queue '{0}' to topic '{1}'", queue, commandKey);
+		channel.QueueBind (queue, "amq.topic", commandKey);
 		consumer = new QueueingBasicConsumer (channel);
 		string consumerTag = channel.BasicConsume (queue, false, consumer);
 		Debug.LogFormat ("Queue '{0}' subscribed to topic '{1}' using consumerTag '{2}", 
-		                 queue, imageKey, consumerTag);
+		                 queue, commandKey, consumerTag);
 	}
 	
 	// Update is called once per frame
@@ -45,6 +46,10 @@ public class NaoBehavior : MonoBehaviour {
 			                 e.BasicProperties.AppId, e.BasicProperties.MessageId,
 			                 e.BasicProperties.ContentType, e.BasicProperties.ContentEncoding,
 			                 e.BasicProperties.Headers.Keys, bodyStr);
+			JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
+			MoveTo moveToObj = JsonConvert.DeserializeObject<MoveTo>(bodyStr, jsonSettings);
+			Debug.LogFormat ("MoveTo backDistance={0} rightDistance={1} turnCcwDeg={2}",
+			                 moveToObj.BackDistance, moveToObj.RightDistance, moveToObj.TurnCcwDeg);
 		}
 	}
 }
