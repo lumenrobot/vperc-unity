@@ -7,8 +7,9 @@ public class NaoBehavior : MonoBehaviour {
 
 	IModel channel;
 	QueueingBasicConsumer consumer;
-	float elapsedTime = 0.0;
-	float timeToTake = null;
+	float elapsedTime = 0f;
+	float timeToTake = 0f;
+	MoveTo lastMoveTo;
 
 	// Use this for initialization
 	void Start () {
@@ -40,11 +41,17 @@ public class NaoBehavior : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (timeToTake != null) {
+		if (timeToTake > 0f) {
+			float progress;
+			if (elapsedTime + Time.deltaTime >= timeToTake) {
+				progress = (timeToTake - elapsedTime) / timeToTake;
+				timeToTake = 0f; // animation done
+			} else {
+				progress = Time.deltaTime / timeToTake;
+			}
 			elapsedTime += Time.deltaTime;
-			float t = elapsedTime / timeToTake;
 			transform.Translate(
-				0, 0, 0, Space.Self);
+				lastMoveTo.RightDistance * progress, 0, -lastMoveTo.BackDistance * progress, Space.Self);
 		}
 
 		RabbitMQ.Client.Events.BasicDeliverEventArgs e = 
@@ -56,12 +63,12 @@ public class NaoBehavior : MonoBehaviour {
 			                 e.BasicProperties.ContentType, e.BasicProperties.ContentEncoding,
 			                 e.BasicProperties.Headers.Keys, bodyStr);
 			JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
-			MoveTo moveToObj = JsonConvert.DeserializeObject<MoveTo>(bodyStr, jsonSettings);
+			lastMoveTo = JsonConvert.DeserializeObject<MoveTo>(bodyStr, jsonSettings);
 			Debug.LogFormat ("MoveTo backDistance={0} rightDistance={1} turnCcwDeg={2}",
-			                 moveToObj.BackDistance, moveToObj.RightDistance, moveToObj.TurnCcwDeg);
+			                 lastMoveTo.BackDistance, lastMoveTo.RightDistance, lastMoveTo.TurnCcwDeg);
 
-			elapsedTime = 0.0;
-			timeToTake = Mathf.Sqrt(Mathf.Pow(moveToObj.BackDistance, 2) + Mathf.Pow (moveToObj.RightDistance, 2));
+			elapsedTime = 0f;
+			timeToTake = Mathf.Sqrt(Mathf.Pow(lastMoveTo.BackDistance, 2) + Mathf.Pow (lastMoveTo.RightDistance, 2));
 			/*
 			Vector3.Lerp
 			transform.position.z -= moveToObj.BackDistance;
