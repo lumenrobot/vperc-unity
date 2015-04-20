@@ -52,6 +52,7 @@ public class NaoBehavior : MonoBehaviour {
 			elapsedTime += Time.deltaTime;
 			transform.Translate(
 				lastMoveTo.RightDistance * progress, 0, -lastMoveTo.BackDistance * progress, Space.Self);
+			transform.Rotate(0f, -lastMoveTo.TurnCcwDeg * progress, 0f, Space.Self);
 		}
 
 		RabbitMQ.Client.Events.BasicDeliverEventArgs e = 
@@ -68,7 +69,7 @@ public class NaoBehavior : MonoBehaviour {
 			                 lastMoveTo.BackDistance, lastMoveTo.RightDistance, lastMoveTo.TurnCcwDeg);
 
 			elapsedTime = 0f;
-			timeToTake = Mathf.Sqrt(Mathf.Pow(lastMoveTo.BackDistance, 2) + Mathf.Pow (lastMoveTo.RightDistance, 2));
+			timeToTake = 10f * Mathf.Sqrt(Mathf.Pow(lastMoveTo.BackDistance, 2) + Mathf.Pow (lastMoveTo.RightDistance, 2));
 			/*
 			Vector3.Lerp
 			transform.position.z -= moveToObj.BackDistance;
