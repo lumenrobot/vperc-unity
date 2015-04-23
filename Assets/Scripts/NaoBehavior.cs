@@ -33,6 +33,7 @@ public class NaoBehavior : MonoBehaviour {
 		string commandKey = "avatar.NAO.command";
 		Debug.LogFormat ("Bound queue '{0}' to topic '{1}'", queue, commandKey);
 		channel.QueueBind (queue, "amq.topic", commandKey);
+		channel.QueueBind (queue, "amq.topic", "lumen.arkan.human.detection");
 		consumer = new QueueingBasicConsumer (channel);
 		string consumerTag = channel.BasicConsume (queue, false, consumer);
 		Debug.LogFormat ("Queue '{0}' subscribed to topic '{1}' using consumerTag '{2}", 
@@ -64,17 +65,31 @@ public class NaoBehavior : MonoBehaviour {
 			                 e.BasicProperties.ContentType, e.BasicProperties.ContentEncoding,
 			                 e.BasicProperties.Headers.Keys, bodyStr);
 			JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
-			lastMoveTo = JsonConvert.DeserializeObject<MoveTo>(bodyStr, jsonSettings);
-			Debug.LogFormat ("MoveTo backDistance={0} rightDistance={1} turnCcwDeg={2}",
-			                 lastMoveTo.BackDistance, lastMoveTo.RightDistance, lastMoveTo.TurnCcwDeg);
-
-			elapsedTime = 0f;
-			timeToTake = 10f * Mathf.Sqrt(Mathf.Pow(lastMoveTo.BackDistance, 2) + Mathf.Pow (lastMoveTo.RightDistance, 2));
-			/*
-			Vector3.Lerp
-			transform.position.z -= moveToObj.BackDistance;
-			transform.position.x += moveToObj.RightDistance;
-			*/
+			IDictionary dict = JsonConvert.DeserializeObject<IDictionary>(bodyStr, jsonSettings);
+			if (dict["@type"] != null) {
+				switch (dict["@type"].ToString()) {
+				case "MoveTo":
+					lastMoveTo = JsonConvert.DeserializeObject<MoveTo>(bodyStr, jsonSettings);
+					Debug.LogFormat ("MoveTo backDistance={0} rightDistance={1} turnCcwDeg={2}",
+					                 lastMoveTo.BackDistance, lastMoveTo.RightDistance, lastMoveTo.TurnCcwDeg);
+					
+					elapsedTime = 0f;
+					timeToTake = 10f * Mathf.Sqrt(Mathf.Pow(lastMoveTo.BackDistance, 2) + Mathf.Pow (lastMoveTo.RightDistance, 2));
+					/*
+				Vector3.Lerp
+				transform.position.z -= moveToObj.BackDistance;
+				transform.position.x += moveToObj.RightDistance;
+				*/
+					break;
+				case "HumanDetected":
+					HumanDetected humanDetected = JsonConvert.DeserializeObject<HumanDetected>(bodyStr, jsonSettings);
+					Debug.LogFormat ("Got HumanDetected {0}", humanDetected);
+					if (HumanDetector.INSTANCE != null) {
+						HumanDetector.INSTANCE.OnHumanDetected(humanDetected);
+					}
+					break;
+				}
+			}
 		}
 	}
 }
