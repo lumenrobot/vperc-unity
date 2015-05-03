@@ -27,4 +27,13 @@ public class HumanDetector : MonoBehaviour {
 		                                        (float) -humanDetected.position.z);
 	}
 
+	public void OnHumanMoving(HumanMoving humanMoving)
+	{
+		Debug.LogFormat ("Creating Moving {0} at {1}", humanMoving.humanId, humanMoving.position);
+		GameObject human = GameObject.Find (humanMoving.humanId);
+		human.transform.position=new Vector3 ((float) humanMoving.position.x, 
+		                                      (float) humanMoving.position.y, 
+		                                      (float) -humanMoving.position.z);
+	}
+	
 }

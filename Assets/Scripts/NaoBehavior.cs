@@ -31,9 +31,10 @@ public class NaoBehavior : MonoBehaviour {
 
 		string queue = channel.QueueDeclare ("", false, false, false, null);
 		string commandKey = "avatar.NAO.command";
+		string humanDetectionKey = "lumen.arkan.human.detection";
 		Debug.LogFormat ("Bound queue '{0}' to topic '{1}'", queue, commandKey);
 		channel.QueueBind (queue, "amq.topic", commandKey);
-		channel.QueueBind (queue, "amq.topic", "lumen.arkan.human.detection");
+		channel.QueueBind (queue, "amq.topic", humanDetectionKey);
 		consumer = new QueueingBasicConsumer (channel);
 		string consumerTag = channel.BasicConsume (queue, false, consumer);
 		Debug.LogFormat ("Queue '{0}' subscribed to topic '{1}' using consumerTag '{2}", 
@@ -88,7 +89,20 @@ public class NaoBehavior : MonoBehaviour {
 						HumanDetector.INSTANCE.OnHumanDetected(humanDetected);
 					}
 					break;
+				case "HumanChanges":
+					HumanChanges humanChanges = JsonConvert.DeserializeObject<HumanChanges>(bodyStr, jsonSettings);
+					Debug.LogFormat ("Got HumanChanges {0}", humanChanges);
+					foreach (HumanDetected dd in humanChanges.humanDetecteds)
+					{
+						HumanDetector.INSTANCE.OnHumanDetected(dd);
+					}
+					foreach (HumanMoving dd in humanChanges.humanMovings)
+					{
+						HumanDetector.INSTANCE.OnHumanMoving(dd);
+					}
+					break;
 				}
+
 			}
 		}
 	}
