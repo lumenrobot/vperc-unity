@@ -57,14 +57,19 @@ public class NaoBehavior : MonoBehaviour {
 			transform.Rotate(0f, -lastMoveTo.TurnCcwDeg * progress, 0f, Space.Self);
 		}
 
-		RabbitMQ.Client.Events.BasicDeliverEventArgs e = 
-			(RabbitMQ.Client.Events.BasicDeliverEventArgs)consumer.Queue.DequeueNoWait (null);
-		if (e != null) {
+		while (true) {
+			RabbitMQ.Client.Events.BasicDeliverEventArgs e = 
+				(RabbitMQ.Client.Events.BasicDeliverEventArgs)consumer.Queue.DequeueNoWait (null);
+			if (e == null)
+				break;
+
 			string bodyStr = System.Text.Encoding.UTF8.GetString(e.Body);
+			/*
 			Debug.LogFormat ("Got message: appId={0} msgId={1} content={2};{3} {4} {5}", 
 			                 e.BasicProperties.AppId, e.BasicProperties.MessageId,
 			                 e.BasicProperties.ContentType, e.BasicProperties.ContentEncoding,
 			                 e.BasicProperties.Headers.Keys, bodyStr);
+			                 */
 			JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
 			IDictionary dict = JsonConvert.DeserializeObject<IDictionary>(bodyStr, jsonSettings);
 			if (dict["@type"] != null) {
@@ -84,14 +89,14 @@ public class NaoBehavior : MonoBehaviour {
 					break;
 				case "HumanDetected":
 					HumanDetected humanDetected = JsonConvert.DeserializeObject<HumanDetected>(bodyStr, jsonSettings);
-					Debug.LogFormat ("Got HumanDetected {0}", humanDetected);
+					//Debug.LogFormat ("HumanDetected {0} {1}", humanDetected.humanId, humanDetected.position);
 					if (HumanDetector.INSTANCE != null) {
 						HumanDetector.INSTANCE.OnHumanDetected(humanDetected);
 					}
 					break;
 				case "HumanChanges":
 					HumanChanges humanChanges = JsonConvert.DeserializeObject<HumanChanges>(bodyStr, jsonSettings);
-					Debug.LogFormat ("Got HumanChanges {0}", humanChanges);
+					//Debug.LogFormat ("Got HumanChanges {0}", humanChanges);
 					foreach (HumanDetected dd in humanChanges.humanDetecteds)
 					{
 						HumanDetector.INSTANCE.OnHumanDetected(dd);
@@ -102,7 +107,6 @@ public class NaoBehavior : MonoBehaviour {
 					}
 					break;
 				}
-
 			}
 		}
 	}
