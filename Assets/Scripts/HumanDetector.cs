@@ -46,6 +46,7 @@ public class HumanDetector : MonoBehaviour {
 
 	public void OnHumanMoving(HumanMoving humanMoving)
 	{
+
 		Debug.LogFormat ("Moving {0} to {1}", humanMoving.humanId, humanMoving.position);
 		humanPositions [humanMoving.humanId] = new Vector3 ((float) humanMoving.position.x, 
 		                                                    (float) humanMoving.position.y, 
@@ -61,6 +62,13 @@ public class HumanDetector : MonoBehaviour {
 			human.name = humanMoving.humanId;
 			human.transform.position = humanPositions [humanMoving.humanId];
 		}
+
+		var angle  = System.Math.Atan2 
+			((humanPositions [humanMoving.humanId].z - human.transform.position.z),
+			 (humanPositions [humanMoving.humanId].x  - human.transform.position.x))
+			*(180 / 3.14);
+		human.transform.Rotate( new Vector3(0,(float)angle,0), Time.deltaTime, Space.World);
+		
 
 		/*
 		human.transform.position=new Vector3 ((float) humanMoving.position.x, 
