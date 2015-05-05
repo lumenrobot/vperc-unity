@@ -37,8 +37,8 @@ public class NaoBehavior : MonoBehaviour {
 		channel.QueueBind (queue, "amq.topic", humanDetectionKey);
 		consumer = new QueueingBasicConsumer (channel);
 		string consumerTag = channel.BasicConsume (queue, false, consumer);
-		Debug.LogFormat ("Queue '{0}' subscribed to topic '{1}' using consumerTag '{2}", 
-		                 queue, commandKey, consumerTag);
+		Debug.LogFormat ("Queue '{0}' subscribed to topic '{1}' and '{2}' using consumerTag '{3}", 
+		                 queue, commandKey, humanDetectionKey, consumerTag);
 	}
 	
 	// Update is called once per frame
@@ -96,7 +96,8 @@ public class NaoBehavior : MonoBehaviour {
 					break;
 				case "HumanChanges":
 					HumanChanges humanChanges = JsonConvert.DeserializeObject<HumanChanges>(bodyStr, jsonSettings);
-					//Debug.LogFormat ("Got HumanChanges {0}", humanChanges);
+					//Debug.LogFormat ("Got HumanChanges {0} + {1}", 
+					//                 humanChanges.humanDetecteds.Count, humanChanges.humanMovings.Count);					
 					foreach (HumanDetected dd in humanChanges.humanDetecteds)
 					{
 						HumanDetector.INSTANCE.OnHumanDetected(dd);
