@@ -21,20 +21,19 @@ public class HumanDetector : MonoBehaviour {
 	void Update () {
 		foreach (var entry in humanPositions) {
 			GameObject human = GameObject.Find (entry.Key);
-			human.transform.position = Vector3.MoveTowards(human.transform.position, entry.Value, 2.0f * Time.deltaTime);
+			human.transform.position = Vector3.MoveTowards(human.transform.position, entry.Value, 1.0f * Time.deltaTime);
 		}
 	}
 
 	public void OnHumanDetected(HumanDetected humanDetected) {
 		Debug.LogFormat ("Creating human {0} at {1}", humanDetected.humanId, humanDetected.position);
 		GameObject human;
-		if (Flag%2 == 0) {
-			human= Object.Instantiate (model1);
-			Flag++;
+		if ((Flag % 2) == 0) {
+			human = Object.Instantiate (model1);
 		} else {
-			human= Object.Instantiate (model2);
-			Flag++;
+			human = Object.Instantiate (model2);
 		}
+		Flag++;
 
 		human.SetActive (true);
 		human.name = humanDetected.humanId;
@@ -58,18 +57,26 @@ public class HumanDetector : MonoBehaviour {
 		if (human == null) {
 			// fault tolerant
 			Debug.LogFormat ("Force-creating human {0} at {1}", humanMoving.humanId, humanMoving.position);
-			human = Object.Instantiate (model1);
+			if ((Flag % 2) == 0) {
+				human = Object.Instantiate (model1);
+			} else {
+				human = Object.Instantiate (model2);
+			}
+			Flag++;
 			human.SetActive (true);
 			human.name = humanMoving.humanId;
 			human.transform.position = humanPositions [humanMoving.humanId];
 		}
 
-		var angle1 = System.Math.Atan2 
-			((humanPositions [humanMoving.humanId].z - human.transform.position.z),
-			 (humanPositions [humanMoving.humanId].x - human.transform.position.x));
+		var dz = humanPositions [humanMoving.humanId].z - human.transform.position.z;
+		var dx = humanPositions [humanMoving.humanId].x - human.transform.position.x;
+		var angle1 = System.Math.Atan2(dz, dx);
 		var angle = angle1 * (180.0 / Mathf.PI);
+		if (dz > 0)
+			angle = angle + 180.0;
 		//human.transform.Rotate( new Vector3(0,(float)angle,0), Time.deltaTime, Space.World);
-		human.transform.eulerAngles = new Vector3 (0, (float)angle, 0);//, Time.deltaTime, Space.World);
+		//human.transform.eulerAngles = new Vector3 (0, (float)angle, 0);//, Time.deltaTime, Space.World);
+		human.transform.rotation = Quaternion.LookRotation (new Vector3 (dx, 0f, dz));
 		Debug.LogFormat ("Rotate {0} to {1}. dz:{2} dx:{3} for {4}",
 		                 angle, human.transform.rotation.eulerAngles.y,
 		                 humanPositions [humanMoving.humanId].z - human.transform.position.z,
