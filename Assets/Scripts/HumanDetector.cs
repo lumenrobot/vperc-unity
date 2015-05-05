@@ -28,11 +28,12 @@ public class HumanDetector : MonoBehaviour {
 	public void OnHumanDetected(HumanDetected humanDetected) {
 		Debug.LogFormat ("Creating human {0} at {1}", humanDetected.humanId, humanDetected.position);
 		GameObject human;
-		if (Flag == 0) {
+		if (Flag%2 == 0) {
 			human= Object.Instantiate (model1);
 			Flag++;
 		} else {
 			human= Object.Instantiate (model2);
+			Flag++;
 		}
 
 		human.SetActive (true);
@@ -63,11 +64,17 @@ public class HumanDetector : MonoBehaviour {
 			human.transform.position = humanPositions [humanMoving.humanId];
 		}
 
-		var angle  = System.Math.Atan2 
+		var angle1 = System.Math.Atan2 
 			((humanPositions [humanMoving.humanId].z - human.transform.position.z),
-			 (humanPositions [humanMoving.humanId].x  - human.transform.position.x))
-			*(180 / 3.14);
-		human.transform.Rotate( new Vector3(0,(float)angle,0), Time.deltaTime, Space.World);
+			 (humanPositions [humanMoving.humanId].x - human.transform.position.x));
+		var angle = angle1 * (180.0 / Mathf.PI);
+		//human.transform.Rotate( new Vector3(0,(float)angle,0), Time.deltaTime, Space.World);
+		human.transform.eulerAngles = new Vector3 (0, (float)angle, 0);//, Time.deltaTime, Space.World);
+		Debug.LogFormat ("Rotate {0} to {1}. dz:{2} dx:{3} for {4}",
+		                 angle, human.transform.rotation.eulerAngles.y,
+		                 humanPositions [humanMoving.humanId].z - human.transform.position.z,
+		                 humanPositions [humanMoving.humanId].x - human.transform.position.x,
+		                 human.name);
 		
 
 		/*
